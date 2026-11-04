@@ -5,15 +5,15 @@ import { MONSTERS, NPCS, ZONES, type Point, type ZoneId, type WorldMonster } fro
 import type { ClassId } from "../data/classes";
 
 type Quest = { id:string; title:string; description:string; target:string; required:number; rewardExp:number; rewardGold:number; accepted:boolean; claimed:boolean; progress:number; };
-type SaveData = { level:number; exp:number; gold:number; hp:number; mp:number; zone:ZoneId; position:Point; inventory:Record<string,number>; quests:Quest[]; };
+type SaveData = { level:number; exp:number; gold:number; hp:number; mp:number; zone:ZoneId; position:Point; inventory:Record<string,number>; equipped:Record<string,string>; quests:Quest[]; };
 const QUESTS:Quest[]=[
  {id:"village-slimes",title:"Dọn sạch cổng làng",description:"Đánh bại 3 Slime Kẹo để bảo vệ dân làng.",target:"jelly",required:3,rewardExp:90,rewardGold:55,accepted:false,claimed:false,progress:0},
  {id:"forest-crystals",title:"Thu thập tinh thể",description:"Đánh bại 2 Slime Pha Lê trong rừng.",target:"crystal-slime",required:2,rewardExp:160,rewardGold:95,accepted:false,claimed:false,progress:0},
  {id:"darkness",title:"Ánh sáng trong hang sâu",description:"Đánh bại Hắc Slime đang canh giữ tinh thể.",target:"dark-slime",required:1,rewardExp:220,rewardGold:140,accepted:false,claimed:false,progress:0}
 ];
 const SAVE_KEY="candy-game-phase2-save-v1";
-const freshSave=():SaveData=>({level:1,exp:0,gold:80,hp:120,mp:40,zone:"candy-village",position:{x:2,y:6},inventory:{...STARTER_INVENTORY},quests:QUESTS.map(q=>({...q}))});
-function readSave():SaveData{try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const parsed=JSON.parse(raw) as Partial<SaveData>;return {...freshSave(),...parsed,inventory:{...STARTER_INVENTORY,...parsed.inventory},quests:parsed.quests??QUESTS.map(q=>({...q}))};}}catch{/* corrupted local save: start a fresh profile */}return freshSave();}
+const freshSave=():SaveData=>({level:1,exp:0,gold:80,hp:120,mp:40,zone:"candy-village",position:{x:2,y:6},inventory:{...STARTER_INVENTORY},equipped:{},quests:QUESTS.map(q=>({...q}))});
+function readSave():SaveData{try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const parsed=JSON.parse(raw) as Partial<SaveData>;return {...freshSave(),...parsed,inventory:{...STARTER_INVENTORY,...parsed.inventory},equipped:parsed.equipped??{},quests:parsed.quests??QUESTS.map(q=>({...q}))};}}catch{/* corrupted local save: start a fresh profile */}return freshSave();}
 interface Props { classId:ClassId; heroName:string; }
 export default function PhaseTwoExperience({classId,heroName}:Props){
  const [save,setSave]=useState<SaveData>(()=>readSave());
@@ -21,12 +21,12 @@ export default function PhaseTwoExperience({classId,heroName}:Props){
  const [enemyHp,setEnemyHp]=useState(0),[battleMessage,setBattleMessage]=useState("");
  const [dialogue,setDialogue]=useState<{name:string;text:string}|null>(null);
  const [tab,setTab]=useState<"quest"|"bag"|"shop">("quest");
- const [equipped,setEquipped]=useState<Record<string,string>>({});
- const [bonus,setBonus]=useState({attack:0,defense:0});
  const [toast,setToast]=useState("");
  const zone=ZONES.find(z=>z.id===save.zone)!;
  const xpNeed=save.level*100;
  const monsters=MONSTERS[save.zone],npcs=NPCS[save.zone];
+ const equipped=save.equipped;
+ const bonus=useMemo(()=>Object.values(equipped).reduce((total,id)=>{const item=ITEM_BY_ID[id];return {attack:total.attack+(item?.attack??0),defense:total.defense+(item?.defense??0)};},{attack:0,defense:0}),[equipped]);
  const playerAttack=12+(save.level-1)*3+bonus.attack+(classId==="fireblade"?4:classId==="stormshadow"?5:0);
  const playerDefense=5+(save.level-1)+bonus.defense+(classId==="stoneguard"?4:classId==="frostmage"?2:0);
  const handlePositionChange=useCallback((position:Point)=>setSave(prev=>({...prev,position})),[]);
@@ -41,7 +41,7 @@ export default function PhaseTwoExperience({classId,heroName}:Props){
  const acceptQuest=(id:string)=>{setSave(prev=>({...prev,quests:prev.quests.map(q=>q.id===id?{...q,accepted:true}:q)}));notify("Đã nhận nhiệm vụ.");};
  const claimQuest=(q:Quest)=>{if(q.progress<q.required||q.claimed)return;setSave(prev=>({...prev,gold:prev.gold+q.rewardGold,quests:prev.quests.map(item=>item.id===q.id?{...item,claimed:true}:item)}));gainExp(q.rewardExp);notify("Hoàn thành nhiệm vụ: +"+q.rewardExp+" EXP, +"+q.rewardGold+" vàng.");};
  const buyItem=(id:string)=>{const item=ITEM_BY_ID[id];if(!item||save.gold<item.price)return notify("Không đủ vàng.");setSave(prev=>({...prev,gold:prev.gold-item.price,inventory:{...prev.inventory,[id]:(prev.inventory[id]??0)+1}}));notify("Đã mua "+item.name+".");};
- const equipItem=(id:string)=>{const item=ITEM_BY_ID[id];if(!item||item.type==="consumable"||item.type==="material")return;const slot=item.type;const old=equipped[slot];const oldItem=old?ITEM_BY_ID[old]:undefined;setBonus(prev=>({attack:prev.attack-(oldItem?.attack??0)+(item.attack??0),defense:prev.defense-(oldItem?.defense??0)+(item.defense??0)}));setEquipped(prev=>({...prev,[slot]:id}));notify("Đã trang bị "+item.name+".");};
+ const equipItem=(id:string)=>{const item=ITEM_BY_ID[id];if(!item||item.type==="consumable"||item.type==="material")return;const slot=item.type;setSave(prev=>({...prev,equipped:{...prev.equipped,[slot]:id}}));notify("Đã trang bị "+item.name+".");};
  const changeZone=(id:ZoneId)=>{const target=ZONES.find(z=>z.id===id)!;if(save.level<target.level)return notify("Cần cấp "+target.level+" để vào khu vực này.");update({zone:id,position:{x:2,y:6}});};
  const handleNpc=useCallback((id:string)=>{const npc=npcs.find(n=>n.id===id);if(!npc)return;setDialogue({name:npc.name,text:npc.dialogue});if(npc.role==="Cửa hàng")setTab("shop");if(npc.role==="Giao nhiệm vụ")setTab("quest");},[npcs]);
  const handleMonster=useCallback((id:string)=>beginBattle(id),[beginBattle]);
