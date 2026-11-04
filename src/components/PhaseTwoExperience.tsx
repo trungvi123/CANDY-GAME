@@ -29,7 +29,6 @@ export default function PhaseTwoExperience({classId,heroName}:Props){
  const monsters=MONSTERS[save.zone],npcs=NPCS[save.zone];
  const playerAttack=12+(save.level-1)*3+bonus.attack+(classId==="fireblade"?4:classId==="stormshadow"?5:0);
  const playerDefense=5+(save.level-1)+bonus.defense+(classId==="stoneguard"?4:classId==="frostmage"?2:0);
- const currentNpc=(id:string)=>npcs.find(n=>n.id===id);
  const handlePositionChange=useCallback((position:Point)=>setSave(prev=>({...prev,position})),[]);
  useEffect(()=>{localStorage.setItem(SAVE_KEY,JSON.stringify(save));},[save]);
  const update=(patch:Partial<SaveData>)=>setSave(prev=>({...prev,...patch}));
@@ -46,7 +45,6 @@ export default function PhaseTwoExperience({classId,heroName}:Props){
  const changeZone=(id:ZoneId)=>{const target=ZONES.find(z=>z.id===id)!;if(save.level<target.level)return notify("Cần cấp "+target.level+" để vào khu vực này.");update({zone:id,position:{x:2,y:6}});};
  const handleNpc=useCallback((id:string)=>{const npc=npcs.find(n=>n.id===id);if(!npc)return;setDialogue({name:npc.name,text:npc.dialogue});if(npc.role==="Cửa hàng")setTab("shop");if(npc.role==="Giao nhiệm vụ")setTab("quest");},[npcs]);
  const handleMonster=useCallback((id:string)=>beginBattle(id),[beginBattle]);
- const activeQuests=save.quests.filter(q=>q.accepted&&!q.claimed);
  const completedCount=save.quests.filter(q=>q.claimed).length;
  const inventoryItems=useMemo(()=>Object.entries(save.inventory).filter(([,count])=>count>0),[save.inventory]);
  const hpMax=120+Math.max(0,save.level-1)*18;
