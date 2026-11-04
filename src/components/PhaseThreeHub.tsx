@@ -1,3 +1,4 @@
+import "../phase-three.css";
 import { useCallback, useEffect, useState } from "react";
 
 type Player = { userId: string; username: string; classId: string; hp: number; maxHp: number; mp: number; guard: number; rating: number };
