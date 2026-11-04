@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import GameBoard from "./components/GameBoard";
+import PhaseTwoExperience from "./components/PhaseTwoExperience";
 import { ELEMENTS, type ElementId } from "./game/elements";
 import type { TurnPayload } from "./game/BoardScene";
 import { HERO_CLASSES, type ClassId } from "./data/classes";
@@ -163,6 +164,8 @@ export default function App() {
           <div className="enemy-stats"><span>ĐỘ KHÓ <b>★ ★ ☆</b></span><span>PHẦN THƯỞNG <b>120 EXP</b></span><span>VÀNG <b>50</b></span></div>
         </aside>
       </section>
+
+      <PhaseTwoExperience classId={classId} heroName={hero.name} />
 
       <section className="bottom-grid">
         <div className="panel log-panel"><div className="panel-title"><h3>NHẬT KÝ CHIẾN ĐẤU</h3><span>LIVE</span></div><div className="log-list">{log.map(entry => <p key={entry.id} className={entry.tone}>{entry.text}</p>)}</div></div>
