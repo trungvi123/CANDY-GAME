@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import GameBoard from "./components/GameBoard";
 import PhaseTwoExperience from "./components/PhaseTwoExperience";
-import { ELEMENTS, type ElementId } from "./game/elements";
+import { ELEMENTS } from "./game/elements";
 import type { TurnPayload } from "./game/BoardScene";
 import { HERO_CLASSES, type ClassId } from "./data/classes";
 
@@ -171,7 +171,7 @@ export default function App() {
         <div className="panel log-panel"><div className="panel-title"><h3>NHẬT KÝ CHIẾN ĐẤU</h3><span>LIVE</span></div><div className="log-list">{log.map(entry => <p key={entry.id} className={entry.tone}>{entry.text}</p>)}</div></div>
         <div className="panel rules-panel"><div className="panel-title"><h3>LUẬT NGUYÊN TỐ</h3><span>HƯỚNG DẪN</span></div><div className="rules-grid"><span>🔥 Hỏa <b>Sát thương</b></span><span>💧 Thủy <b>Hồi HP</b></span><span>⚡ Lôi <b>+3 sát thương/viên</b></span><span>🌿 Mộc <b>+5 MP/viên</b></span><span>🌑 Ám <b>Xuyên giáp</b></span><span>✨ Quang <b>+4 khiên/viên</b></span></div></div>
       </section>
-      <footer>© 2026 KẸO THẦN CHIẾN KÝ <span>·</span> BẢN DEMO GIAI ĐOẠN 1 <span>·</span> DỮ LIỆU TRẬN ĐẤU CHƯA LƯU MÁY CHỦ</footer>
+      <footer>© 2026 KẸO THẦN CHIẾN KÝ <span>·</span> GIAI ĐOẠN 1 + 2 <span>·</span> TIẾN TRÌNH RPG LƯU TRÊN THIẾT BỊ <span>·</span> CHƯA CÓ MÁY CHỦ</footer>
     </main>
   );
 }
